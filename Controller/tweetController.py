@@ -9,7 +9,13 @@ class TweetController:
         self.scraper = scraper
         self.twitterService = TwitterService()
     
-    def get_tweets(self, user, date):
+    def get_users_tweets(self, users, date):
+        tweets = {}
+        for user in users:
+            tweets[user] = self.scraper.get_tweets(user,date)
+        return jsonify(tweets)
+
+    def get_user_tweets(self, user, date):
         tweets = self.scraper.get_tweets(user,date)
         return jsonify(tweets)
 
