@@ -21,3 +21,8 @@ class TweetController:
             
         counter = collections.Counter(replies)
         return jsonify(replies,counter)
+
+    def get_sentiment(self,thread):
+        tweets = []
+        tweets = self.scraper.get_thread(thread)
+        return jsonify(tweets)

@@ -6,6 +6,8 @@ class TwitterService:
     def __init__(self) -> None:
         self.redisService = RedisService()
     def search_tweets(self, query):
-        items = list(sntwitter.TwitterSearchScraper(query).get_items())
-        return items
+        return sntwitter.TwitterSearchScraper(query).get_items()
+    
+    def get_tweets(self,tweet_id):
+        return sntwitter.TwitterTweetScraper(tweet_id).get_items()
     
