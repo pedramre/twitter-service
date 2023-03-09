@@ -24,11 +24,11 @@ def get_tweets(user):
     print('user',user)
     return controller.get_user_tweets(user, date)
 
-@app.route('/audiences')
-def get_audiences():
+@app.route('/audiences/<user>')
+def get_audiences(user):
     scraper = TweetScraper(TwitterService())
     controller = TweetController(scraper)
-    return controller.get_audiences(users[0], date)
+    return controller.get_audiences(user, date)
 
 @app.route('/sentiment')
 def get_sentiment():

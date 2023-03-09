@@ -45,6 +45,22 @@ class TweetScraper:
                     })
         
         return replies
+
+    def get_account_audiences(self,user,date):
+        tweets = self.get_tweets(user,date)
+        audiences = []
+        for tweet in tweets:
+            tweet_id = tweet['id']
+            replies = self.get_replies(user,tweet_id)
+            for index,reply in enumerate(replies):
+                if index > 100:
+                    break
+                audiences.append({
+                    'displayname':reply['displayname'],
+                    'username':reply['username'],
+                    })
+        
+        return audiences
     
     def get_thread(self,url):
         tweet_id = url.split('/')[-1]

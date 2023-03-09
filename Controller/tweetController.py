@@ -20,13 +20,10 @@ class TweetController:
         return jsonify(tweets)
 
     def get_audiences(self,user,date):
-        tweets = self.scraper.get_tweets(user,date)
-        for tweet in tweets:
-            tweet_id = tweet['id']
-            replies=self.scraper.get_replies(user,tweet_id)
+        
+        audiences = self.scraper.get_account_audiences(user,date)
             
-        counter = collections.Counter(replies)
-        return jsonify(replies,counter)
+        return jsonify(audiences)
 
     def get_sentiment(self,thread):
         tweets = []
