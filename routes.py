@@ -7,7 +7,7 @@ from flask import jsonify,request
 
 # Define the Twitter user to track
 users = ['alikarimi_ak8','taylorlorenz','cathiedwood']
-date = 'since:2023-02-27'
+date = 'since:2023-03-07'
 thread = 'https://twitter.com/GeorgePointon_/status/1629085362214543361'
 
 # Define an API route to get the tweets and replies from the user

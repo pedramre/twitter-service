@@ -2,14 +2,18 @@ import snscrape.modules.twitter as sntwitter
 import collections
 import time
 from textblob import TextBlob
+from datetime import datetime
+from Service.twitterService import RedisService
+import json
 
 class TweetScraper:
     def __init__(self, strategy):
         self.strategy = strategy
+        self.redis = RedisService()
     
     def get_tweets(self, user, date):
         tweets = []
-        query = f"from:{user} {date}" 
+        query = f"from:{user} {date}"
         for tweet in self.strategy.search_tweets(query):
             if tweet.inReplyToTweetId is not None:
                 tweets.append({
@@ -34,15 +38,24 @@ class TweetScraper:
     def get_replies(self,user, tweet_id):
         replies = []
         query = f'to:{user} since_id:{tweet_id}'
-        for reply in self.strategy.search_tweets(query):
-            if reply.inReplyToTweetId == tweet_id:
-                replies.append({
-                    'displayname':reply.user.displayname,
-                    'username':reply.user.username,
-                    'rawContent':reply.rawContent,
-                    'renderedContent':reply.renderedContent,
-                    'date':reply.date,
-                    })
+        now = datetime.today().strftime('%Y-%m-%d-%H')
+        redis_key = f'to:{user}-since_id:{tweet_id}-{now}'
+        if(self.redis.check(redis_key)):
+            replies = self.redis.get(redis_key)
+            replies = json.loads(replies)
+        else:
+            for reply in self.strategy.search_tweets(query):
+                if reply.inReplyToTweetId == tweet_id:
+                    replies.append({
+                        "displayname":reply.user.displayname,
+                        "username":reply.user.username,
+                        "rawContent":reply.rawContent,
+                        "renderedContent":reply.renderedContent,
+                        "date":(reply.date).isoformat(),
+                        })
+            
+            str_obj = json.dumps(replies)
+            self.redis.store(redis_key,str_obj)
         
         return replies
 
@@ -50,17 +63,20 @@ class TweetScraper:
         tweets = self.get_tweets(user,date)
         audiences = []
         for tweet in tweets:
-            tweet_id = tweet['id']
+            tweet_id = tweet["id"]
             replies = self.get_replies(user,tweet_id)
             for index,reply in enumerate(replies):
                 if index > 100:
                     break
-                audiences.append({
-                    'displayname':reply['displayname'],
-                    'username':reply['username'],
-                    })
+                audiences.append({'username':reply['username'],'displayname':reply['displayname']})
         
         return audiences
+
+    def get_account_active_audiences(self,audiences):
+        data = collections.Counter(audiences)
+        active_audiences = [{'username':item, 'number_of_replies':freq} for item, freq in data.most_common()]
+        
+        return active_audiences
     
     def get_thread(self,url):
         tweet_id = url.split('/')[-1]

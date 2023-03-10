@@ -2,7 +2,6 @@ from flask import jsonify
 from Model.tweetScraper import TweetScraper
 from Service.twitterService import TwitterService
 import snscrape.modules.twitter as sntwitter
-import collections
 
 class TweetController:
     def __init__(self, scraper):
@@ -22,8 +21,11 @@ class TweetController:
     def get_audiences(self,user,date):
         
         audiences = self.scraper.get_account_audiences(user,date)
-            
-        return jsonify(audiences)
+        audiences_list = []
+        [audiences_list.append(audience['username']) for audience in audiences]
+        active_audiences = self.scraper.get_account_active_audiences(audiences_list)
+        
+        return jsonify({'audiences':audiences,'active_audiences':active_audiences})
 
     def get_sentiment(self,thread):
         tweets = []
