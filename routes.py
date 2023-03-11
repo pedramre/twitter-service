@@ -2,7 +2,6 @@ from __main__ import app
 from Controller.tweetController import TweetController
 from Model.tweetScraper import TweetScraper
 from Service.twitterService import TwitterService
-from flask import jsonify,request
 
 
 # Define the Twitter user to track
