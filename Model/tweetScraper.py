@@ -5,6 +5,7 @@ from textblob import TextBlob
 from datetime import datetime
 from Service.twitterService import RedisService
 import json
+import datetime
 
 class TweetScraper:
     def __init__(self, strategy):
@@ -35,18 +36,18 @@ class TweetScraper:
                 })
         return tweets
     
-    def get_replies(self,user, tweet_id):
+    def get_replies_until_today(self,user, tweet_id):
         replies = []
-        query = f'to:{user} since_id:{tweet_id}'
-        now = datetime.today().strftime('%Y-%m-%d-%H')
-        redis_key = f'to:{user}-since_id:{tweet_id}-{now}'
-        if(self.redis.check(redis_key)):
-            replies = self.redis.get(redis_key)
-            replies = json.loads(replies)
-        else:
+        tweet_replies = []
+        date_now = datetime.datetime.now()
+        date_now_str = date_now.strftime("%Y-%m-%d")
+        redis_key_today = f'replies-to:{user}-since_id:{tweet_id}-until:{date_now_str}'
+        query = f'to:{user} since_id:{tweet_id} until:{date_now_str}'
+        
+        if (not self.redis.check(redis_key_today)):
             for reply in self.strategy.search_tweets(query):
                 if reply.inReplyToTweetId == tweet_id:
-                    replies.append({
+                    tweet_replies.append({
                         "displayname":reply.user.displayname,
                         "username":reply.user.username,
                         "rawContent":reply.rawContent,
@@ -54,10 +55,34 @@ class TweetScraper:
                         "date":(reply.date).isoformat(),
                         })
             
-            str_obj = json.dumps(replies)
-            self.redis.store(redis_key,str_obj)
+            str_obj = json.dumps(tweet_replies)
+            self.redis.store(redis_key_today,str_obj)
+
+        keys = self.redis.get_keys(f'replies-to:{user}-since_id:{tweet_id}-until:*')
+        for key in keys:
+            replies += self.redis.get_last_replies(key)
         
         return replies
+    
+    def get_replies_today(self,user, tweet_id):
+        tweet_replies = []
+        date_now = datetime.datetime.now()
+        date_now_str = date_now.strftime("%Y-%m-%d")
+        query = f'to:{user} since_id:{tweet_id} since:{date_now_str}'
+        for reply in self.strategy.search_tweets(query):
+                if reply.inReplyToTweetId == tweet_id:
+                    tweet_replies.append({
+                        "displayname":reply.user.displayname,
+                        "username":reply.user.username,
+                        "rawContent":reply.rawContent,
+                        "renderedContent":reply.renderedContent,
+                        "date":(reply.date).isoformat(),
+                        })
+        return tweet_replies
+
+    def get_replies(self,user, tweet_id):
+        
+        return  self.get_replies_today(user,tweet_id) + self.get_replies_until_today(user,tweet_id)
 
     def get_account_audiences(self,user,date):
         tweets = self.get_tweets(user,date)
@@ -65,9 +90,7 @@ class TweetScraper:
         for tweet in tweets:
             tweet_id = tweet["id"]
             replies = self.get_replies(user,tweet_id)
-            for index,reply in enumerate(replies):
-                if index > 100:
-                    break
+            for reply in enumerate(replies):
                 audiences.append({'username':reply['username'],'displayname':reply['displayname']})
         
         return audiences
