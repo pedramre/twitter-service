@@ -8,11 +8,20 @@ import json
 import datetime
 
 class TweetScraper:
+    """A Model Class to deal with controller """
+
     def __init__(self, strategy):
         self.strategy = strategy
         self.redis = RedisService()
     
     def get_tweets(self, user, date):
+        """Function to get user's tweets since specific date
+            Parameters
+            ----------
+            user : str, require
+            date : str, require
+        """
+
         tweets = []
         query = f"from:{user} {date}"
         for tweet in self.strategy.search_tweets(query):
@@ -37,6 +46,14 @@ class TweetScraper:
         return tweets
     
     def get_replies_until_today(self,user, tweet_id):
+        """Function to get replies on specific tweet until today
+            Replies are got by snscrape in first time, the other times get them from redis
+            Parameters
+            ----------
+            user : str, require
+            tweet_id : str, require
+        """
+
         replies = []
         tweet_replies = []
         date_now = datetime.datetime.now()
@@ -65,6 +82,14 @@ class TweetScraper:
         return replies
     
     def get_replies_today(self,user, tweet_id):
+        """Function to get replies on specific tweet just today
+            Replies are always got by snscrape due to staying update
+            Parameters
+            ----------
+            user : str, require
+            tweet_id : str, require
+        """
+
         tweet_replies = []
         date_now = datetime.datetime.now()
         date_now_str = date_now.strftime("%Y-%m-%d")
@@ -81,10 +106,24 @@ class TweetScraper:
         return tweet_replies
 
     def get_replies(self,user, tweet_id):
+        """Function to get replies
+            Parameters
+            ----------
+            user : str, require
+            tweet_id : str, require
+        """
         
         return  self.get_replies_today(user,tweet_id) + self.get_replies_until_today(user,tweet_id)
 
     def get_account_audiences(self,user,date):
+        """Function to get user's audiences
+            Audiences are got from replies
+            Parameters
+            ----------
+            user : str, require
+            date : str, require
+        """
+
         tweets = self.get_tweets(user,date)
         audiences = []
         for tweet in tweets:
@@ -96,12 +135,25 @@ class TweetScraper:
         return audiences
 
     def get_account_active_audiences(self,audiences):
+        """Function to get user's active audiences
+            Active audiences are calculated from the number of replies
+            Parameters
+            ----------
+            audiences : array, require
+        """
+
         data = collections.Counter(audiences)
         active_audiences = [{'username':item, 'number_of_replies':freq} for item, freq in data.most_common()]
         
         return active_audiences
     
     def get_thread(self,user,thread):
+        """Function to get specific user's thread and calculate thread/audiences sentiment
+            Parameters
+            ----------
+            user : str, require
+            thread : str, require
+        """
         tweet_id = thread
         username = user
         query = f'from:{username} since_id:{tweet_id}'
