@@ -101,9 +101,9 @@ class TweetScraper:
         
         return active_audiences
     
-    def get_thread(self,url):
-        tweet_id = url.split('/')[-1]
-        username = url.split('/')[-3]
+    def get_thread(self,user,thread):
+        tweet_id = thread
+        username = user
         query = f'from:{username} since_id:{tweet_id}'
         tweets = []
         thread_sum = 0

@@ -27,7 +27,7 @@ class TweetController:
         
         return jsonify({'audiences':audiences,'active_audiences':active_audiences})
 
-    def get_sentiment(self,thread):
+    def get_sentiment(self,user,thread):
         tweets = []
-        tweets = self.scraper.get_thread(thread)
+        tweets = self.scraper.get_thread(user,thread)
         return jsonify(tweets)
