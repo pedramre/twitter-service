@@ -30,7 +30,7 @@ class TweetScraper:
                     'type': 'tweet',
                     'username': tweet.user.username,
                     'date': tweet.date,
-                    'text': tweet.content,
+                    'text': tweet.rawContent,
                     'url': tweet.url,
                     'id': tweet.id,
                 })
@@ -90,7 +90,7 @@ class TweetScraper:
         for tweet in tweets:
             tweet_id = tweet["id"]
             replies = self.get_replies(user,tweet_id)
-            for reply in enumerate(replies):
+            for reply in replies:
                 audiences.append({'username':reply['username'],'displayname':reply['displayname']})
         
         return audiences
@@ -126,7 +126,6 @@ class TweetScraper:
                 
             tweets.append({
                 'id':tweet.id,
-                'content':tweet.content,
                 'rawContent':tweet.rawContent,
                 'date':tweet.date,
                 'tweet_sentiment':tweet_sentiment,
